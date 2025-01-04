@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
-from vision.vision import Vision
+from __init__ import Vision
 
 def main():
-    driver_name = input("Inserisci il nome del driver (openni2/realsense): ")
+    driver_name = "openni2" # input("Inserisci il nome del driver (openni2/realsense): ")
 
     try:
         vision = Vision.initialize(driver_name)
