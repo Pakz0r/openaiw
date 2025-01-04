@@ -1,4 +1,4 @@
-from vision.ivision import IVision
+from .ivision import IVision
 import numpy as np
 import pyrealsense2 as rs
 

@@ -3,11 +3,15 @@ import numpy as np
 from vision import Vision
 
 def main():
-    print("Inizializzazione dei driver di OpenNI2...")
-    vision = Vision.initialize("openni2")
+    driver_name = input("Inserisci il nome del driver (openni2/realsense): ")
 
     try:
+        vision = Vision.initialize(driver_name)
         print("Camera inizializzata. Premi 'q' per uscire.")
+
+        dev_info = vision.get_device_info()
+        if dev_info is not None:
+            print(f"Collegato con {dev_info.vendor.decode()} {dev_info.name.decode()}")
 
         while True:
             depth_frame, color_frame = vision.get_frames()
@@ -22,7 +26,7 @@ def main():
 
             # Mostra i frame
             combined_view = np.hstack((color_frame, depth_colormap))
-            cv2.imshow("OpenNI2 - Color + Depth", combined_view)
+            cv2.imshow("Vision - Color + Depth", combined_view)
 
             # Premi 'q' per uscire
             if cv2.waitKey(1) & 0xFF == ord('q'):

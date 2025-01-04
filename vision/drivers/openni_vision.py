@@ -1,4 +1,4 @@
-from vision.ivision import IVision
+from .ivision import IVision
 import numpy as np
 import cv2
 from primesense import openni2
@@ -32,6 +32,9 @@ class OpenNIVision(IVision):
         except Exception as e:
             print(f"Errore durante la lettura dei frame da OpenNI: {e}")
             return None, None
+    
+    def get_device_info(self):
+        return self.dev.get_device_info()
 
     def __del__(self):
         self.depth_stream.stop()

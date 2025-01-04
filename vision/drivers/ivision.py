@@ -12,6 +12,11 @@ class IVision(ABC):
         pass
 
     @abstractmethod
+    def get_device_info(self):
+        """Ritorna le informazioni sul device collegato"""
+        pass
+
+    @abstractmethod
     def __del__(self):
         """Distruttore per arrestare la camera e rilasciare le risorse."""
         pass
