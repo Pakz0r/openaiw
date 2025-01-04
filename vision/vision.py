@@ -1,4 +1,4 @@
-from drivers import OpenNIVision, RealSenseVision
+from .drivers import OpenNIVision, RealSenseVision
 
 class Vision:
     @staticmethod

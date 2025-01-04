@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from vision import Vision
+from vision.vision import Vision
 
 def main():
     driver_name = input("Inserisci il nome del driver (openni2/realsense): ")
