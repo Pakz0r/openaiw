@@ -1,8 +1,7 @@
-if __name__ == 'utils':
-    from .openpose import OPUtils
-else:
-    from openpose import OPUtils
+from .openpose import OPUtils
+from .coordinate_mapper import CoordinateMapper
 
 __all__ = [
-    "OPUtils"
+    "OPUtils",
+    "CoordinateMapper"
 ]

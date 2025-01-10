@@ -1,11 +1,13 @@
 if __name__ == 'vision':
     from .drivers import *
+    from .drivers.ivision import IVision
 else:
     from drivers import *
+    from drivers.ivision import IVision
 
 class Vision:
     @staticmethod
-    def initialize(driver_name):
+    def initialize(driver_name) -> IVision:
         """Crea un'istanza di IVision in base al nome del driver."""
         driver_name = driver_name.lower()
         if driver_name == "openni2":
