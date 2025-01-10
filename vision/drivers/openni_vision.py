@@ -36,9 +36,9 @@ class OpenNIVision(IVision):
     def get_device_info(self):
         return self.dev.get_device_info()
     
-    def convert_depth_to_world(self, u: float, v: float, depth: float):
-        z = depth / 1000.0  # Profondità in metri (da mm)
-        return openni2.convert_depth_to_world(self.depth_stream, u, v, z)
+    def convert_point_to_world(self, u: float, v: float, depth: float):
+        depth = depth / 1000.0  # Profondità in metri (da mm)
+        return openni2.convert_depth_to_world(self.depth_stream, u, v, depth)
 
     def __del__(self):
         self.depth_stream.stop()

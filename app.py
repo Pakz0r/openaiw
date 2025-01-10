@@ -1,4 +1,5 @@
 import os
+import shutil
 import cv2
 import numpy as np
 from vision import Vision
@@ -21,6 +22,22 @@ CONFIG = {
     "output_dir" : "output"
 }
 
+# Cancella tutto il contenuto della cartella specificata.
+def clear_folder(folder_path):
+    if os.path.exists(folder_path):
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)  # Rimuovi file o collegamenti simbolici
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)  # Rimuovi directory
+            except Exception as e:
+                print(f"Errore durante la rimozione di {file_path}: {e}")
+        print(f"I contenuti della cartella '{folder_path}' sono stati rimossi.")
+    else:
+        print(f"La cartella '{folder_path}' non esiste.")
+
 # Salva il JSON generato in un file nel percorso specificato.
 def save_json_to_file(json_data, frame_id, output_dir):
     os.makedirs(output_dir, exist_ok=True)
@@ -32,6 +49,9 @@ def save_json_to_file(json_data, frame_id, output_dir):
 # Programma principale
 def main():    
     try:
+        # Pulisci il contenuto della cartella di output
+        clear_folder(CONFIG['output_dir'])
+
         # Seleziona la camera basandosi sulla configurazione
         vision = Vision.initialize(CONFIG["vision"]["driver"])
 
