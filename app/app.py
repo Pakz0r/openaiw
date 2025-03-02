@@ -17,7 +17,7 @@ CONFIG = {
         "net_resolution": "-1x96", # Default "-1x368"; AI_Watch "-1x128"
         "hand": False,
         "hand_net_resolution": "224x224", # "Default "368x368" (multiples of 16)"
-        "face": False,
+        "face": True,
         "face_net_resolution": "224x224", # "Default "368x368" (multiples of 16)"
     },
     "room" : {
