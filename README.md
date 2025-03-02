@@ -5,7 +5,7 @@ AIWatch is a university research project with is intended to create a real-world
 This information following processing, through which digital twins are created, is transmitted to the virtual environment within which it is then reproduced.
 
 # VSCode Windows Setup
-After creating the python environment in VS Code, create the file [.venv/Lib/site-packages/custom_paths.pth] and include all the custom paths for all the modules, like:
+After creating the python environment in VS Code, create the file [.venv/Lib/site-packages/custom_paths.pth](.venv/Lib/site-packages/custom_paths.pth) and include all the custom paths for all the modules, like:
 ```
 :: The openpose build path
 C:\openpose\build
