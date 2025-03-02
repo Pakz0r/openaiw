@@ -119,7 +119,7 @@ def main():
                 output_frame = np.zeros_like(depth_colormap)
 
             ## STEP 3 (GENERATE JSON)
-            output_json = mapper.generate_json(vision, datum, depth_image, frame_id)
+            output_json = mapper.generate_json(vision, datum, frame_id)
             save_json_to_file(output_json, frame_id, CONFIG['output_dir'])
 
             ## STEP 4 (SHOW RESULTS)

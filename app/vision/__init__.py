@@ -12,4 +12,6 @@ class Vision:
         driver_name = driver_name.lower()
         if driver_name == "openni2":
             return OpenNIVision(args)
+        elif driver_name == "realsense":
+            return RealSenseVision()
         raise ValueError(f"Driver non supportato: {driver_name}")

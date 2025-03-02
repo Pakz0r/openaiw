@@ -51,7 +51,7 @@ class CoordinateMapper:
         return {"pitch": pitch, "roll": roll, "yaw": yaw}
 
     # Genera il JSON a partire dal datum di OpenPose
-    def generate_json(self, vision: IVision, datum, depth_image, frame_id: int):
+    def generate_json(self, vision: IVision, datum, frame_id: int):
         result = {
             "ID_Frame": frame_id,
             "People": [],
@@ -68,7 +68,7 @@ class CoordinateMapper:
 
                 for point_id, keypoint in enumerate(person_keypoints):
                     u, v, confidence = keypoint[0], keypoint[1], keypoint[2]
-                    x, y, z = vision.convert_point_to_world(u, v, depth_image[int(v), int(u)])
+                    x, y, z = vision.convert_point_to_world(u, v)
                     person_data["skeleton"].append({
                         "pointID": point_id,
                         "x": float(x),

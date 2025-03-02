@@ -17,7 +17,7 @@ class IVision(ABC):
         pass
 
     @abstractmethod
-    def convert_point_to_world(self, u: float, v: float, depth: float):
+    def convert_point_to_world(self, u: float, v: float):
         """Converte un punto da 2D a 3D"""
         pass
 

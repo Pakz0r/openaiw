@@ -23,6 +23,7 @@ class OpenNIVision(IVision):
 
             # Processa il frame di profondità
             depth_image = np.array(depth_frame.get_buffer_as_uint16()).reshape(depth_frame.height, depth_frame.width)
+            self.depth_image = depth_image
 
             # Processa il frame colore
             color_data = np.array(color_frame.get_buffer_as_uint8()).reshape(color_frame.height, color_frame.width, 3)
@@ -36,8 +37,8 @@ class OpenNIVision(IVision):
     def get_device_info(self):
         return self.dev.get_device_info()
     
-    def convert_point_to_world(self, u: float, v: float, depth: float):
-        depth = depth / 1000.0  # Profondità in metri (da mm)
+    def convert_point_to_world(self, u: float, v: float):
+        depth = self.depth_image[int(v), int(u)] / 1000.0  # Profondità in metri (da mm)
         return openni2.convert_depth_to_world(self.depth_stream, u, v, depth)
 
     def __del__(self):
