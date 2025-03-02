@@ -1,0 +1,63 @@
+ARG BASE_IMAGE=nvidia/cuda:11.7.1-cudnn8-devel-ubuntu20.04
+
+#################################
+#   Openpose Builder Stage  #
+#################################
+FROM $BASE_IMAGE AS openpose-builder
+
+# To avoid waiting for input during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Builder dependencies installation
+RUN apt-get update \
+    && apt-get install -qq -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    pkg-config \
+    libprotobuf-dev \
+    protobuf-compiler \
+    libopencv-dev \
+    libgoogle-glog-dev \
+    libboost-all-dev \
+    libhdf5-dev \
+    libatlas-base-dev \
+    curl \
+    python3 \
+    python3-dev \
+    python3-pip \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and install python dependencies
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install numpy opencv-python
+
+# Download sources
+WORKDIR /usr/src
+RUN git clone https://github.com/CMU-Perceptual-Computing-Lab/openpose.git && \
+    cd openpose && git submodule update --init --recursive --remote
+
+# Build and install
+RUN cd /usr/src/openpose \
+    && mkdir build && cd build \
+    && cmake \
+    -DCMAKE_INSTALL_PREFIX=/opt/openpose \
+    -DBUILD_PYTHON=ON \
+    -DDOWNLOAD_BODY_25_MODEL=OFF \
+    -DDOWNLOAD_FACE_MODEL=OFF \ 
+    -DDOWNLOAD_HAND_MODEL=OFF \
+    -DUSE_CUDNN=OFF \
+    .. && make -j$(($(nproc)-1)) && make install
+
+ENV PATH=/opt/openpose:$PATH
+ENV LIBRARY_PATH=/opt/openpose/lib:$LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/opt/openpose/lib:$LD_LIBRARY_PATH
+ENV PYTHONPATH=/opt/openpose/python:$PYTHONPATH
+
+# Copy models from local
+COPY ./models/ /usr/src/openpose/models/
+
+# set default command
+WORKDIR /usr/src/openpose/build/examples/tutorial_api_python
+CMD ["python3", "01_body_from_image.py"]

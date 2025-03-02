@@ -1,5 +1,5 @@
 .venv/
-backup/
+app/models/
 openpose/
 output/
 *.pyc
