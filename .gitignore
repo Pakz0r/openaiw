@@ -1,4 +1,5 @@
 .venv/
+3rdparty/
 app/models/
 openpose/
 output/
