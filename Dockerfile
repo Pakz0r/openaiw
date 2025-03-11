@@ -124,8 +124,10 @@ RUN cmake -DOPENNI2_DIR=/usr/include/openni2 -DREALSENSE2_DIR=/opt/librealsense 
 ######################################
 FROM ${BASE_IMAGE} AS aiwatch
 
-# Copy binaries from builder stage
+# Copy binaries from builders stage
 COPY --from=openpose-builder /opt/openpose /opt/openpose
+COPY --from=librealsense-builder /opt/librealsense /opt/librealsense
+COPY --from=librealsense-builder /usr/lib/python3/dist-packages/pyrealsense2 /usr/lib/python3/dist-packages/pyrealsense2
 COPY --from=librealsense-builder /usr/src/librealsense/config/99-realsense-libusb.rules /etc/udev/rules.d/
 COPY --from=librealsense-builder /usr/src/librealsense/config/99-realsense-d4xx-mipi-dfu.rules /etc/udev/rules.d/
 
@@ -156,9 +158,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Setup ENV variables
-ENV PATH=/opt/openpose:$PATH
-ENV LIBRARY_PATH=/opt/openpose/lib:$LIBRARY_PATH
-ENV LD_LIBRARY_PATH=/opt/openpose/lib:$LD_LIBRARY_PATH
+ENV PATH=opt/librealsense:/opt/openpose:$PATH
+ENV LIBRARY_PATH=/opt/librealsense/lib:/opt/openpose/lib:$LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/opt/librealsense/lib:/opt/openpose/lib:$LD_LIBRARY_PATH
 ENV PYTHONPATH="/opt/openpose/python:${PYTHONPATH}"
 
 # Copy Realsense driver into OpenNI2
@@ -167,11 +169,14 @@ COPY --from=librealsense-builder /opt/librealsense/lib/librealsense2.so /usr/lib
 
 # Upgrade pip and install python dependencies
 RUN python3 -m pip install --upgrade pip && \
-    python3 -m pip install numpy opencv-python primesense
+    python3 -m pip install numpy opencv-python primesense 
 
 # Copy the AIWatch application code
 WORKDIR /app
 COPY /app /app
 
 # Run AIWatch application
-CMD ["python3", "app.py", "-openni2_dll_directories", "/usr/lib/", "-openpose_model_path", "/app/models/"]
+CMD ["python3", "app.py", \
+    "-vision_driver", "realsense", \
+    "-openni2_dll_directories", "/usr/lib/", \
+    "-openpose_model_path", "/app/models/"]
