@@ -56,9 +56,9 @@ cmake .. -G "Visual Studio 17 2022" ^
     -DPYTHON_INCLUDE_DIR=%PYTHON_INCLUDE_DIR% ^
     -DCMAKE_INSTALL_PREFIX=%OPENPOSE_INSTALL_DIR% ^
     -DBUILD_EXAMPLES=OFF ^
-    -DGPU_MODE=CPU_ONLY ^
     -A x64 ^
-    -T v143
+    -T v143 ^
+    -Wno-deprecated-gpu-targets
 
 if errorlevel 1 (
     echo "Errore durante la configurazione con CMake."
@@ -78,6 +78,11 @@ copy x64\Release\* bin\
 echo "Compilazione completata con successo."
 
 :: Copia i file nella cartella locale di openpose
+
+:: Crea la directory di build se non esiste
+if not exist "%OPENPOSE_INSTALL_DIR%" (
+    mkdir "%OPENPOSE_INSTALL_DIR%"
+)
 
 copy bin\* %OPENPOSE_INSTALL_DIR%
 copy python\openpose\__init__.py %OPENPOSE_INSTALL_DIR%
