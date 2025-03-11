@@ -3,4 +3,5 @@
 app/models/
 openpose/
 output/
+unity/
 *.pyc

@@ -8,7 +8,7 @@ from utils import OPUtils, CoordinateMapper
 
 CONFIG = {
     "vision": {
-        "driver" : "openni2",
+        "driver" : "realsense",
         "dll_directories": "C:\Program Files\OpenNI2\Redist"
     },
     "openpose" : {
