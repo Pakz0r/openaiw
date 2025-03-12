@@ -169,7 +169,7 @@ COPY --from=librealsense-builder /opt/librealsense/lib/librealsense2.so /usr/lib
 
 # Upgrade pip and install python dependencies
 RUN python3 -m pip install --upgrade pip && \
-    python3 -m pip install numpy opencv-python primesense 
+    python3 -m pip install numpy opencv-python primesense facenet-pytorch scipy
 
 # Copy the AIWatch application code
 WORKDIR /app
@@ -179,4 +179,6 @@ COPY /app /app
 CMD ["python3", "app.py", \
     "-vision_driver", "realsense", \
     "-openni2_dll_directories", "/usr/lib/", \
-    "-openpose_model_path", "/app/models/"]
+    "-openpose_model_path", "/app/models/", \
+    "-hpe_model_root", "/app/HPE/models/", \
+    "-hpe_device", "cpu"]

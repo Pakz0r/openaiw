@@ -3,6 +3,9 @@ import shutil
 import cv2
 import argparse
 import numpy as np
+from PIL import Image
+from HPE import HPEModel
+from HPE.utils import compute_center, fetch_faces_keypoints_from_datum, find_closest_centroid
 from vision import Vision
 from utils import OPUtils, CoordinateMapper
 
@@ -17,11 +20,15 @@ CONFIG = {
         "net_resolution": "-1x368", # Default "-1x368"; AI_Watch "-1x128"
         "hand": False,
         "hand_net_resolution": "224x224", # "Default "368x368" (multiples of 16)"
-        "face": True,
+        "face": False,
         "face_net_resolution": "224x224", # "Default "368x368" (multiples of 16)"
     },
     "room" : {
         "thing_id" : "digitaltwin:Laboratorio_Corridoio:1"
+    },
+    "HPE" : {
+        "model_root" : './app/HPE/models/',
+        "device" : "cpu"
     },
     "output_dir" : "output"
 }
@@ -50,6 +57,13 @@ def save_json_to_file(json_data, frame_id, output_dir):
         f.write(json_data)
     print(f"Nuovo frame salvato in: {file_path}")
 
+def show_results(output_frame, depth_colormap):
+    try:
+        combined_view = np.hstack((output_frame, depth_colormap))
+        cv2.imshow("OpenPose Output + Depth", combined_view)
+    finally:
+        return
+
 # Programma principale
 def main():
     parser = argparse.ArgumentParser()
@@ -58,6 +72,8 @@ def main():
     parser.add_argument("-vision_driver", type=str, required=False)
     parser.add_argument("-openpose_model_path", type=str, required=False)
     parser.add_argument("-room_id", type=str, required=False)
+    parser.add_argument("-hpe_model_root", type=str, required=False)
+    parser.add_argument("-hpe_device", type=str, required=False)
 
     args = parser.parse_args()
 
@@ -73,6 +89,12 @@ def main():
     if args.room_id is not None:
         CONFIG["room"]["thing_id"] = args.room_id
 
+    if args.hpe_model_root is not None:
+        CONFIG["HPE"]["model_root"] = args.hpe_model_root
+
+    if args.hpe_device is not None:
+        CONFIG["HPE"]["device"] = args.hpe_device
+
     try:
         # Pulisci il contenuto della cartella di output
         clear_folder(CONFIG['output_dir'])
@@ -87,8 +109,11 @@ def main():
         print("Inizializzazione di OpenPose...")
         opUtils = OPUtils(CONFIG["openpose"])
 
-        print("Inizializzazione del Mapper...")
+        print("Inizializzazione del Coordinate Mapper...")
         mapper = CoordinateMapper(CONFIG["room"]["thing_id"])
+
+        print("Inizializzazione del modulo HPE")
+        hpe_model = HPEModel(CONFIG["HPE"]['model_root'], CONFIG["HPE"]["device"])
 
         print("Applicazione inizializzata con successo. Premere 'q' per uscire.")
 
@@ -112,24 +137,55 @@ def main():
             depth_colormap = cv2.applyColorMap(normalized_depth.astype(np.uint8), cv2.COLORMAP_JET)
 
             if color_image is not None:
-                # Passa il frame RGB a OpenPose
+                # Passa il frame BGR a OpenPose
                 datum = opUtils.process_frame(color_image)
                 output_frame = datum.cvOutputData
             else:
                 output_frame = np.zeros_like(depth_colormap)
 
-            ## STEP 3 (GENERATE JSON)
-            output_json = mapper.generate_json(vision, datum, frame_id)
+            ## STEP 3 (RUN HPE MODEL)
+            faces, detected_faces_centroids = None, None
+            face_rotations = {}
+
+            if color_image is not None:
+                # Converti color_image in PIL.Image (RGB) e rileva le facce
+                img_rgb = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
+                image = Image.fromarray(img_rgb)
+                faces, detected_faces_centroids = hpe_model.detect_faces(image)
+
+            # If there are faces
+            if faces is not None:
+                print("Faces detected")
+
+                # Fetch openpose faces centroids in order to match them with detected ones
+                openpose_faces_centroids = []
+                openpose_faces_keypoints = fetch_faces_keypoints_from_datum(datum)
+                for face_keypoints in openpose_faces_keypoints:
+                    openpose_faces_centroids.append(compute_center(face_keypoints))
+                
+                # Build a list of sorted index such that each face detected by the AIModel is ordered following the openpose ordering schema
+                sorted_indices = []
+                for openpose_face_centroid in openpose_faces_centroids:
+                    sorted_indices.append(find_closest_centroid(openpose_face_centroid, detected_faces_centroids))
+
+                # Cycle over the faces, run the HPE and append the output to the angles dictionary
+                for index in sorted_indices:
+                    face = faces[index]
+                    # run hpe model inference
+                    pitch, yaw, roll = hpe_model.predict(face)
+                    face_rotations[index] = {"pitch":pitch, "yaw":yaw, "roll":roll}
+
+            ## STEP X (GENERATE JSON)
+            output_json = mapper.generate_json(vision, datum, frame_id, face_rotations)
             save_json_to_file(output_json, frame_id, CONFIG['output_dir'])
 
-            ## STEP 4 (SHOW RESULTS)
-            # Mostra il risultato combinato
-            combined_view = np.hstack((output_frame, depth_colormap))
-            cv2.imshow("OpenPose Output + Depth", combined_view)
-
-            # Premi 'q' per uscire
+            ## STEP X+1 (SHOW RESULTS)
+            show_results(output_frame, depth_colormap)
+            
+            ## STEP X+2 (CHECK FOR QUIT KEY)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+
     except Exception as e:
         print(f"Errore durante esecuzione dell'applicazione: {e}")
         raise e
