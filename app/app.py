@@ -14,7 +14,7 @@ CONFIG = {
     "openpose" : {
         "model_folder": "./app/models/",
         "model_pose": "BODY_25",
-        "net_resolution": "-1x128", # Default "-1x368"; AI_Watch "-1x128"
+        "net_resolution": "-1x368", # Default "-1x368"; AI_Watch "-1x128"
         "hand": False,
         "hand_net_resolution": "224x224", # "Default "368x368" (multiples of 16)"
         "face": True,
