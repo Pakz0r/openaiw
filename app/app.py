@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 from HPE import HPEModel
 from HPE.utils import compute_center, fetch_faces_keypoints_from_datum, find_closest_centroid
+from falldetection import FDModel
 from vision import Vision
 from utils import OPUtils, CoordinateMapper
 
@@ -28,6 +29,10 @@ CONFIG = {
     },
     "HPE" : {
         "model_root" : './app/HPE/models/',
+        "device" : "cpu"
+    },
+    "Fall" : {
+        "model_root" : './app/falldetection/models/',
         "device" : "cpu"
     },
     "output_dir" : "output"
@@ -74,6 +79,8 @@ def main():
     parser.add_argument("-room_id", type=str, required=False)
     parser.add_argument("-hpe_model_root", type=str, required=False)
     parser.add_argument("-hpe_device", type=str, required=False)
+    parser.add_argument("-fall_model_root", type=str, required=False)
+    parser.add_argument("-fall_device", type=str, required=False)
 
     args = parser.parse_args()
 
@@ -95,6 +102,12 @@ def main():
     if args.hpe_device is not None:
         CONFIG["HPE"]["device"] = args.hpe_device
 
+    if args.fall_model_root is not None:
+        CONFIG["Fall"]["model_root"] = args.fall_model_root
+
+    if args.fall_device is not None:
+        CONFIG["Fall"]["device"] = args.fall_device
+
     try:
         # Pulisci il contenuto della cartella di output
         clear_folder(CONFIG['output_dir'])
@@ -114,6 +127,9 @@ def main():
 
         print("Inizializzazione del modulo HPE")
         hpe_model = HPEModel(CONFIG["HPE"]['model_root'], CONFIG["HPE"]["device"])
+
+        print("Inizializzazione del modulo Fall Detection")
+        fall_model = FDModel(CONFIG["Fall"]['model_root'], CONFIG["Fall"]["device"])
 
         print("Applicazione inizializzata con successo. Premere 'q' per uscire.")
 
@@ -174,6 +190,16 @@ def main():
                     # run hpe model inference
                     pitch, yaw, roll = hpe_model.predict(face)
                     face_rotations[index] = {"pitch":pitch, "yaw":yaw, "roll":roll}
+
+            ## STEP 4 (FALL DETECTION)
+            try: 
+                HAS_FALLEN = fall_model.detect_fall(datum)
+                
+                if HAS_FALLEN:
+                    print("Fall person detected")
+            except Exception as e:
+                print(f"Errore durante esecuzione del modulo di fall detection: {e}")
+                pass
 
             ## STEP X (GENERATE JSON)
             output_json = mapper.generate_json(vision, datum, frame_id, face_rotations)
