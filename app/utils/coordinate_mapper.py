@@ -51,11 +51,12 @@ class CoordinateMapper:
         return {"pitch": pitch, "roll": roll, "yaw": yaw}
 
     # Genera il JSON a partire dal datum di OpenPose
-    def generate_json(self, vision: IVision, datum, frame_id: int, face_rotations: dict):
+    def generate_json(self, vision: IVision, datum, frame_id: int, face_rotations: dict, has_any_fallen: bool):
         result = {
             "ID_Frame": frame_id,
             "People": [],
-            "thingId": self.thing_id
+            "thingId": self.thing_id,
+            "Has_Fallen": has_any_fallen
         }
 
         if datum.poseKeypoints is not None:

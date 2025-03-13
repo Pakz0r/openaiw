@@ -66,8 +66,8 @@ def show_results(output_frame, depth_colormap):
     try:
         combined_view = np.hstack((output_frame, depth_colormap))
         cv2.imshow("OpenPose Output + Depth", combined_view)
-    finally:
-        return
+    except:
+        pass
 
 # Programma principale
 def main():
@@ -148,6 +148,10 @@ def main():
             frame_id = frame_id + 1
 
             ## STEP 2 (OPENPOSE PROCESS)
+            # Capovolgi entrambi i frame
+            depth_image = cv2.flip(depth_image, 1)
+            color_image = cv2.flip(color_image, 1)
+
             # Normalizza il frame di profondità per la visualizzazione
             normalized_depth = cv2.normalize(depth_image, None, 0, 255, cv2.NORM_MINMAX)
             depth_colormap = cv2.applyColorMap(normalized_depth.astype(np.uint8), cv2.COLORMAP_JET)
@@ -192,17 +196,19 @@ def main():
                     face_rotations[index] = {"pitch":pitch, "yaw":yaw, "roll":roll}
 
             ## STEP 4 (FALL DETECTION)
+            HAS_ANY_FALLEN = False
+
             try: 
-                HAS_FALLEN = fall_model.detect_fall(datum)
+                HAS_ANY_FALLEN = fall_model.detect_fall(datum)
                 
-                if HAS_FALLEN:
+                if HAS_ANY_FALLEN:
                     print("Fall person detected")
             except Exception as e:
                 print(f"Errore durante esecuzione del modulo di fall detection: {e}")
                 pass
 
             ## STEP X (GENERATE JSON)
-            output_json = mapper.generate_json(vision, datum, frame_id, face_rotations)
+            output_json = mapper.generate_json(vision, datum, frame_id, face_rotations, HAS_ANY_FALLEN)
             save_json_to_file(output_json, frame_id, CONFIG['output_dir'])
 
             ## STEP X+1 (SHOW RESULTS)

@@ -42,9 +42,9 @@ class FDTracker:
                 distances[j][i] = np.sqrt(math.pow(cs[0][0]-ps[0][0], 2) + math.pow(cs[0][1]-ps[0][1], 2))
 
         #print(f"distances:{distances}")
-        print(f"previous_skeletons:{len(self.previous_skeletons)}")
-        print(f"missing_frames_counters:{self.missing_frames_counters}")
-        print(f"number of windows:{len(self.windows)}")
+        #print(f"previous_skeletons:{len(self.previous_skeletons)}")
+        #print(f"missing_frames_counters:{self.missing_frames_counters}")
+        #print(f"number of windows:{len(self.windows)}")
         #input()
         #for window in self.windows:
         #    print(f"-- window size:{len(window)}")
