@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 
 class IVision(ABC):
-    @abstractmethod
-    def __init__(self):
+    def __init__(self, wrapper):
         """Costruttore per inizializzare la camera."""
-        pass
+        self.wrapper = wrapper
 
     @abstractmethod
     def get_frames(self):

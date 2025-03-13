@@ -9,6 +9,7 @@ from HPE.utils import compute_center, fetch_faces_keypoints_from_datum, find_clo
 from falldetection import FDModel
 from vision import Vision
 from utils import OPUtils, CoordinateMapper
+from rooms.home import HOME as ROOM
 
 CONFIG = {
     "vision": {
@@ -123,7 +124,7 @@ def main():
         opUtils = OPUtils(CONFIG["openpose"])
 
         print("Inizializzazione del Coordinate Mapper...")
-        mapper = CoordinateMapper(CONFIG["room"]["thing_id"])
+        mapper = CoordinateMapper(CONFIG["room"]["thing_id"], ROOM)
 
         print("Inizializzazione del modulo HPE")
         hpe_model = HPEModel(CONFIG["HPE"]['model_root'], CONFIG["HPE"]["device"])

@@ -5,6 +5,7 @@ from primesense import openni2
 
 class OpenNIVision(IVision):
     def __init__(self, dll_directories):
+        super().__init__("openni2")
         try:
             openni2.initialize(dll_directories) 
             self.dev = openni2.Device.open_any()

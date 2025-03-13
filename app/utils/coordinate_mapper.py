@@ -1,54 +1,25 @@
-import cv2
 import json
-import numpy as np
 from vision.drivers.ivision import IVision
 
 class CoordinateMapper:
-    def __init__(self, thing_id):
+    def __init__(self, thing_id, room):
         self.thing_id = thing_id
-        self.model_points = np.array([  # Modello 3D della testa
-            (0.0, 0.0, 0.0),            # Nose tip
-            (0.0, -330.0, -65.0),       # Chin
-            (-225.0, 170.0, -135.0),    # Left eye left corner
-            (225.0, 170.0, -135.0),     # Right eye right corner
-            (-150.0, -150.0, -125.0),   # Left Mouth corner
-            (150.0, -150.0, -125.0)     # Right mouth corner
-        ])
+        self.room = room
 
-    # Calcola la rotazione del volto (pitch, roll, yaw)
-    def calculate_face_rotation(self, face_keypoints):
-        face_keypoints = np.array(face_keypoints).reshape(-1, 3)  # Converti in matrice (N,3)
-        
-        # Definire punti chiave per il modello della testa
-        image_points = np.array([
-            face_keypoints[30][:2],  # Nose tip
-            face_keypoints[8][:2],   # Chin
-            face_keypoints[36][:2],  # Left eye left corner
-            face_keypoints[45][:2],  # Right eye right corner
-            face_keypoints[48][:2],  # Left mouth corner
-            face_keypoints[54][:2]   # Right mouth corner
-        ], dtype="double")
-
-        # Parametri della camera
-        size = (640, 480)  # Dimensione immagine
-        focal_length = size[1]
-        center = (size[1] / 2, size[0] / 2)
-        camera_matrix = np.array([
-            [focal_length, 0, center[0]],
-            [0, focal_length, center[1]],
-            [0, 0, 1]
-        ], dtype="double")
-
-        # Nessuna distorsione
-        dist_coeffs = np.zeros((4, 1))
-
-        # Calcolo della rotazione
-        success, rotation_vector, translation_vector = cv2.solvePnP(self.model_points, image_points, camera_matrix, dist_coeffs)
-
-        # Convertire la rotazione in angoli (Pitch, Roll, Yaw)
-        rmat, _ = cv2.Rodrigues(rotation_vector)
-        pitch, yaw, roll = np.degrees(np.arctan2(rmat[2, 1], rmat[2, 2])), np.degrees(np.arctan2(-rmat[2, 0], np.sqrt(rmat[2, 1]**2 + rmat[2, 2]**2))), np.degrees(np.arctan2(rmat[1, 0], rmat[0, 0]))
-        return {"pitch": pitch, "roll": roll, "yaw": yaw}
+    def transform_width(self, x = 0.0) -> float:
+        env_width = abs(self.room["min_width"]) + abs(self.room["max_width"])
+        env_width_WP = abs(self.room["min_width_WP"]) + abs(self.room["max_width_WP"])
+        return (((x - self.room["min_width_WP"]) / env_width_WP) * env_width) + self.room["min_width"] + self.room["world_x_origin"]
+    
+    def transform_height(self, y = 0.0) -> float:
+        newY = -y + self.room["max_height_WP"] - self.room["height_offset"]
+        return max(0, min(newY, self.room["max_height"])) # clamp height value
+    
+    def transform_depth(self, z = 0.0) -> float:
+        return -(abs(z) + self.room["world_z_origin"] + self.room["backwall_distance"])
+    
+    def transform(self, x = 0.0, y = 0.0, z = 0.0):
+        return self.transform_width(x), self.transform_height(y), self.transform_depth(z)
 
     # Genera il JSON a partire dal datum di OpenPose
     def generate_json(self, vision: IVision, datum, frame_id: int, face_rotations: dict, has_any_fallen: bool):
@@ -72,6 +43,10 @@ class CoordinateMapper:
                 for point_id, keypoint in enumerate(person_keypoints):
                     u, v, confidence = keypoint[0], keypoint[1], keypoint[2]
                     x, y, z = vision.convert_point_to_world(u, v)
+
+                    if vision.wrapper == "realsense":
+                        x, y, z = self.transform(x, y, z)
+
                     person_data["skeleton"].append({
                         "pointID": point_id,
                         "x": float(x),

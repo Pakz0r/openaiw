@@ -4,6 +4,7 @@ import pyrealsense2 as rs
 
 class RealSenseVision(IVision):
     def __init__(self):
+        super().__init__("realsense")
         try:
             self.pipeline = rs.pipeline()
             config = rs.config()
