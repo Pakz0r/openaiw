@@ -148,10 +148,6 @@ def main():
             frame_id = frame_id + 1
 
             ## STEP 2 (OPENPOSE PROCESS)
-            # Capovolgi entrambi i frame
-            depth_image = cv2.flip(depth_image, 1)
-            color_image = cv2.flip(color_image, 1)
-
             # Normalizza il frame di profondità per la visualizzazione
             normalized_depth = cv2.normalize(depth_image, None, 0, 255, cv2.NORM_MINMAX)
             depth_colormap = cv2.applyColorMap(normalized_depth.astype(np.uint8), cv2.COLORMAP_JET)
