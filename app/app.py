@@ -103,13 +103,6 @@ def main():
         # Pulisci il contenuto della cartella di output
         clear_folder(CONFIG['output_dir'])
 
-        # Seleziona la camera basandosi sulla configurazione
-        vision = Vision.initialize(CONFIG["vision"]["driver"], CONFIG["vision"]["dll_directories"])
-
-        dev_info = vision.get_device_info()
-        if dev_info is not None:
-            print(f"Collegato con {dev_info.vendor.decode()} {dev_info.name.decode()}")
-
         print("Inizializzazione di OpenPose...")
         opUtils = OPUtils(CONFIG["openpose"])
 
@@ -124,6 +117,14 @@ def main():
 
         print(f"Inizializzazione del modulo Fall Detection con '{device}'")
         fall_model = FDModel(CONFIG["Fall"]['model_root'], device)
+
+        # Seleziona la camera basandosi sulla configurazione
+        print("Inizializzazione del modulo di Vision...")
+        vision = Vision.initialize(CONFIG["vision"]["driver"], CONFIG["vision"]["dll_directories"])
+
+        dev_info = vision.get_device_info()
+        if dev_info is not None:
+            print(f"Collegato con {dev_info.vendor.decode()} {dev_info.name.decode()}")
 
         print("Applicazione inizializzata con successo. Premere 'q' per uscire.")
 
