@@ -63,8 +63,8 @@ def save_json_to_file(json_data, frame_id, output_dir):
 
 def show_results(output_frame, depth_colormap):
     try:
-        combined_view = np.hstack((output_frame, depth_colormap))
-        cv2.imshow("OpenPose Output + Depth", combined_view)
+        cv2.imshow("OpenPose Output", output_frame)
+        cv2.imshow("Depth Output", depth_colormap)
     except:
         pass
 
