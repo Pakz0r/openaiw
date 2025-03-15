@@ -3,13 +3,13 @@ import shutil
 import cv2
 import argparse
 import numpy as np
+import torch
 from PIL import Image
 from HPE import HPEModel
 from HPE.utils import compute_center, fetch_faces_keypoints_from_datum, find_closest_centroid
 from falldetection import FDModel
 from vision import Vision
 from utils import OPUtils, CoordinateMapper
-from rooms.home import HOME as ROOM
 
 CONFIG = {
     "vision": {
@@ -30,11 +30,9 @@ CONFIG = {
     },
     "HPE" : {
         "model_root" : './app/HPE/models/',
-        "device" : "cpu"
     },
     "Fall" : {
         "model_root" : './app/falldetection/models/',
-        "device" : "cpu"
     },
     "output_dir" : "output"
 }
@@ -79,9 +77,7 @@ def main():
     parser.add_argument("-openpose_model_path", type=str, required=False)
     parser.add_argument("-room_id", type=str, required=False)
     parser.add_argument("-hpe_model_root", type=str, required=False)
-    parser.add_argument("-hpe_device", type=str, required=False)
     parser.add_argument("-fall_model_root", type=str, required=False)
-    parser.add_argument("-fall_device", type=str, required=False)
 
     args = parser.parse_args()
 
@@ -100,14 +96,8 @@ def main():
     if args.hpe_model_root is not None:
         CONFIG["HPE"]["model_root"] = args.hpe_model_root
 
-    if args.hpe_device is not None:
-        CONFIG["HPE"]["device"] = args.hpe_device
-
     if args.fall_model_root is not None:
         CONFIG["Fall"]["model_root"] = args.fall_model_root
-
-    if args.fall_device is not None:
-        CONFIG["Fall"]["device"] = args.fall_device
 
     try:
         # Pulisci il contenuto della cartella di output
@@ -124,13 +114,16 @@ def main():
         opUtils = OPUtils(CONFIG["openpose"])
 
         print("Inizializzazione del Coordinate Mapper...")
-        mapper = CoordinateMapper(CONFIG["room"]["thing_id"], ROOM)
+        mapper = CoordinateMapper(CONFIG["room"]["thing_id"])
 
-        print("Inizializzazione del modulo HPE")
-        hpe_model = HPEModel(CONFIG["HPE"]['model_root'], CONFIG["HPE"]["device"])
+        print("Recupero informazioni sul Device...")
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-        print("Inizializzazione del modulo Fall Detection")
-        fall_model = FDModel(CONFIG["Fall"]['model_root'], CONFIG["Fall"]["device"])
+        print(f"Inizializzazione del modulo HPE con '{device}'")
+        hpe_model = HPEModel(CONFIG["HPE"]['model_root'], device)
+
+        print(f"Inizializzazione del modulo Fall Detection con '{device}'")
+        fall_model = FDModel(CONFIG["Fall"]['model_root'], device)
 
         print("Applicazione inizializzata con successo. Premere 'q' per uscire.")
 
@@ -193,25 +186,28 @@ def main():
                     face_rotations[index] = {"pitch":pitch, "yaw":yaw, "roll":roll}
 
             ## STEP 4 (FALL DETECTION)
-            HAS_ANY_FALLEN = False
+            HAS_FALLEN = False
 
             try: 
-                HAS_ANY_FALLEN = fall_model.detect_fall(datum)
+                HAS_FALLEN = fall_model.detect_fall(datum)
                 
-                if HAS_ANY_FALLEN:
+                if HAS_FALLEN:
                     print("Fall person detected")
             except Exception as e:
                 print(f"Errore durante esecuzione del modulo di fall detection: {e}")
                 pass
 
-            ## STEP X (GENERATE JSON)
-            output_json = mapper.generate_json(vision, datum, frame_id, face_rotations, HAS_ANY_FALLEN)
+            ## STEP 5 (IDENTIFICATION)
+            ## TO BE ADDED HERE
+
+            ## STEP 6 (GENERATE JSON)
+            output_json = mapper.generate_json(vision, datum, frame_id, face_rotations, HAS_FALLEN)
             save_json_to_file(output_json, frame_id, CONFIG['output_dir'])
 
-            ## STEP X+1 (SHOW RESULTS)
+            ## STEP 7 (SHOW RESULTS)
             show_results(output_frame, depth_colormap)
             
-            ## STEP X+2 (CHECK FOR QUIT KEY)
+            ## STEP 8 (CHECK FOR QUIT KEY)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
