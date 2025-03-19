@@ -12,6 +12,3 @@ docker rmi openaiw || true
 
 # Costruisce la nuova immagine Docker
 docker build -t openaiw .
-
-# (Opzionale) Avvia il container basato sulla nuova immagine
-docker run -d --name openaiw openaiw
