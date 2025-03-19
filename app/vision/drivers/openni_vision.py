@@ -39,7 +39,9 @@ class OpenNIVision(IVision):
         return self.dev.get_device_info()
     
     def convert_point_to_world(self, u: float, v: float):
-        depth = self.depth_image[int(v), int(u)] / 1000.0  # Profondità in metri (da mm)
+        u_clamped = np.clip(int(u), 0, self.depth_image.shape[1] - 1)
+        v_clamped = np.clip(int(v), 0, self.depth_image.shape[0] - 1)
+        depth = self.depth_image[v_clamped, u_clamped] / 1000.0  # Profondità in metri (da mm)
         return openni2.convert_depth_to_world(self.depth_stream, u, v, depth) # Ritorna le coordinate nel sistema right-handed
 
     def __del__(self):

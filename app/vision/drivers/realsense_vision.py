@@ -43,6 +43,7 @@ class RealSenseVision(IVision):
             depth_image = np.asanyarray(depth_frame.get_data())
             color_image = np.asanyarray(color_frame.get_data())
 
+            self.depth_image = depth_image
             return depth_image, color_image
         except Exception as e:
             print(f"Errore durante la lettura dei frame da RealSense: {e}")
@@ -52,7 +53,9 @@ class RealSenseVision(IVision):
         return None
     
     def convert_point_to_world(self, u: float, v: float):
-        depth = self.depth_frame.get_distance(u, v) # Profondità in metri
+        u_clamped = np.clip(int(u), 0, self.depth_image.shape[1] - 1)
+        v_clamped = np.clip(int(v), 0, self.depth_image.shape[0] - 1)
+        depth = self.depth_frame.get_distance(u_clamped, v_clamped) # Profondità in metri
         return rs.rs2_deproject_pixel_to_point(self.intrinsics, [u, v], depth) # Ritorna le coordinate nel sistema right-handed
 
     def __del__(self):
