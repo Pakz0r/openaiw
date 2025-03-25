@@ -3,7 +3,7 @@ import shutil
 import cv2
 import argparse
 import numpy as np
-import torch
+import time
 from PIL import Image
 from HPE import HPEModel
 from HPE.utils import compute_center, fetch_faces_keypoints_from_datum, find_closest_centroid
@@ -30,9 +30,11 @@ CONFIG = {
     },
     "HPE" : {
         "model_root" : './app/HPE/models/',
+        "device": 'cpu'
     },
     "Fall" : {
         "model_root" : './app/falldetection/models/',
+        "device": 'cpu'
     },
     "output_dir" : "output"
 }
@@ -77,7 +79,9 @@ def main():
     parser.add_argument("-openpose_model_path", type=str, required=False)
     parser.add_argument("-room_id", type=str, required=False)
     parser.add_argument("-hpe_model_root", type=str, required=False)
+    parser.add_argument("-hpe_device", type=str, required=False)
     parser.add_argument("-fall_model_root", type=str, required=False)
+    parser.add_argument("-fall_device", type=str, required=False)
 
     args = parser.parse_args()
 
@@ -96,8 +100,14 @@ def main():
     if args.hpe_model_root is not None:
         CONFIG["HPE"]["model_root"] = args.hpe_model_root
 
+    if args.hpe_device is not None:
+        CONFIG["HPE"]["device"] = args.hpe_device
+
     if args.fall_model_root is not None:
         CONFIG["Fall"]["model_root"] = args.fall_model_root
+
+    if args.fall_device is not None:
+        CONFIG["Fall"]["device"] = args.fall_device
 
     try:
         # Pulisci il contenuto della cartella di output
@@ -109,16 +119,14 @@ def main():
         print("Inizializzazione del Coordinate Mapper...")
         mapper = CoordinateMapper(CONFIG["room"]["thing_id"])
 
-        print("Recupero informazioni sul Device...")
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
+        device = CONFIG["HPE"]["device"]
         print(f"Inizializzazione del modulo HPE con '{device}'")
         hpe_model = HPEModel(CONFIG["HPE"]['model_root'], device)
 
+        device = CONFIG["Fall"]["device"]
         print(f"Inizializzazione del modulo Fall Detection con '{device}'")
         fall_model = FDModel(CONFIG["Fall"]['model_root'], device)
 
-        # Seleziona la camera basandosi sulla configurazione
         print("Inizializzazione del modulo di Vision...")
         vision = Vision.initialize(CONFIG["vision"]["driver"], CONFIG["vision"]["dll_directories"])
 
@@ -129,6 +137,8 @@ def main():
         print("Applicazione inizializzata con successo. Premere 'q' per uscire.")
 
         frame_id = -1
+        prev_frame_time = 0
+        new_frame_time = 0
 
         while True:
             ## STEP 1 (FRAMES ACQUISITION)
@@ -205,10 +215,16 @@ def main():
             output_json = mapper.generate_json(vision, datum, frame_id, face_rotations, HAS_FALLEN)
             save_json_to_file(output_json, frame_id, CONFIG['output_dir'])
 
-            ## STEP 7 (SHOW RESULTS)
+            ## STEP 7 (PROFILER INFO)
+            new_frame_time = time.time()
+            fps = int(1 / (new_frame_time - prev_frame_time))
+            prev_frame_time = new_frame_time
+            cv2.putText(output_frame, f"FPS: {fps}", (7, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (100, 255, 0), 2)
+
+            ## STEP 8 (SHOW RESULTS)
             show_results(output_frame, depth_colormap)
             
-            ## STEP 8 (CHECK FOR QUIT KEY)
+            ## STEP 9 (CHECK FOR QUIT KEY)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
