@@ -9,7 +9,7 @@ from HPE import HPEModel
 from HPE.utils import compute_center, fetch_faces_keypoints_from_datum, find_closest_centroid
 from falldetection import FDModel
 from vision import Vision
-from utils import OPUtils, CoordinateMapper
+from utils import OPUtils, CoordinateMapper, SkeletonVisualizer
 
 CONFIG = {
     "vision": {
@@ -63,7 +63,7 @@ def save_json_to_file(json_data, frame_id, output_dir):
         f.write(json_data)
     print(f"Nuovo frame salvato in: {file_path}")
 
-def show_results(output_frame, depth_colormap):
+def show_outputs(output_frame, depth_colormap):
     try:
         cv2.imshow("OpenPose Output", output_frame)
         cv2.imshow("Depth Output", depth_colormap)
@@ -118,6 +118,9 @@ def main():
 
         print("Inizializzazione del Coordinate Mapper...")
         mapper = CoordinateMapper(CONFIG["room"]["thing_id"])
+
+        print("Inizializzazione del Visualizzatore dello scheleto...")
+        visualizer = SkeletonVisualizer()
 
         device = CONFIG["HPE"]["device"]
         print(f"Inizializzazione del modulo HPE con '{device}'")
@@ -221,11 +224,19 @@ def main():
             prev_frame_time = new_frame_time
             cv2.putText(output_frame, f"FPS: {fps}", (7, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (100, 255, 0), 2)
 
-            ## STEP 8 (SHOW RESULTS)
-            show_results(output_frame, depth_colormap)
-            
-            ## STEP 9 (CHECK FOR QUIT KEY)
+            ## STEP 8 (SHOW OUTPUTS)
+            show_outputs(output_frame, depth_colormap)
+
+            # Checks for quit key
             if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+            ## STEP 9 (RENDER RESULTS)
+            visualizer.load_data_from_json(output_json)
+            visualizer.render_frame()
+
+            # Checks for quit key
+            if visualizer.get_key_pressed() == b'q':
                 break
 
     except Exception as e:
