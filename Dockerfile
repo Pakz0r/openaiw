@@ -174,7 +174,6 @@ RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install numpy opencv-python primesense facenet-pytorch scipy && \
     python3 -m pip install PyOpenGL PyOpenGL_accelerate tensorflow-gpu keras
 
-
 # Copy the AIWatch application code
 WORKDIR /app
 COPY /app /app

@@ -7,7 +7,7 @@ import time
 from PIL import Image
 from HPE import HPEModel
 from HPE.utils import compute_center, fetch_faces_keypoints_from_datum, find_closest_centroid
-from falldetection import FDModel
+from fall_detection.FallEngine import FallEngine
 from vision import Vision
 from utils import OPUtils, CoordinateMapper, SkeletonVisualizer
 
@@ -30,11 +30,10 @@ CONFIG = {
     },
     "HPE" : {
         "model_root" : './app/HPE/models/',
-        "device": 'cpu'
+        "device": 'gpu'
     },
     "Fall" : {
-        "model_root" : './app/falldetection/models/',
-        "device": 'cpu'
+        "model_root" : './app/fall_detection/model/',
     },
     "output_dir" : "output"
 }
@@ -81,7 +80,6 @@ def main():
     parser.add_argument("-hpe_model_root", type=str, required=False)
     parser.add_argument("-hpe_device", type=str, required=False)
     parser.add_argument("-fall_model_root", type=str, required=False)
-    parser.add_argument("-fall_device", type=str, required=False)
 
     args = parser.parse_args()
 
@@ -123,12 +121,11 @@ def main():
         visualizer = SkeletonVisualizer()
 
         device = CONFIG["HPE"]["device"]
-        print(f"Inizializzazione del modulo HPE con '{device}'")
+        print(f"Inizializzazione del modulo HPE con '{device}'...")
         hpe_model = HPEModel(CONFIG["HPE"]['model_root'], device)
 
-        device = CONFIG["Fall"]["device"]
-        print(f"Inizializzazione del modulo Fall Detection con '{device}'")
-        fall_model = FDModel(CONFIG["Fall"]['model_root'], device)
+        print(f"Inizializzazione del modulo Fall Detection...")
+        fall_model = FallEngine(CONFIG["Fall"]['model_root'])
 
         print("Inizializzazione del modulo di Vision...")
         vision = Vision.initialize(CONFIG["vision"]["driver"], CONFIG["vision"]["dll_directories"])
@@ -203,10 +200,10 @@ def main():
             HAS_FALLEN = False
 
             try: 
-                HAS_FALLEN = fall_model.detect_fall(datum)
+                HAS_FALLEN = fall_model.run(datum.poseKeypoints)
                 
                 if HAS_FALLEN:
-                    print("Fall person detected")
+                    print("Fallen person detected")
             except Exception as e:
                 print(f"Errore durante esecuzione del modulo di fall detection: {e}")
                 pass

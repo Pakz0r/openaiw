@@ -1,9 +1,11 @@
 import math
 import numpy as np
-from .utils import postprocess, preprocess
+from .Processing import postprocess, preprocess
+from .Drawer import *
 
-class FDTracker:
+class Tracker:
     def __init__(self, counter_threshold=10):
+
         # SHAPE OF SKELETON, EACH ROW IS COMPOSED BY ITS CENTER OF MASS IN X AND Y AND THE ARRAY OF KEYPOINTS COORINATES
         #[[x,y,r],[keypoints]],    0 skeleton i-esimo frame   x
         #[[x,y,r],[keypoints]],    1 skeleton i-esimo frame   y
@@ -14,7 +16,6 @@ class FDTracker:
         self.counter_threshold = counter_threshold
         self.missing_frames_counters = []
         self.windows = []
-        self.global_counter = 0 # contatore che conta il numero di frame processati in totale dal tracker
 
     def _track(self):
         '''
@@ -34,7 +35,9 @@ class FDTracker:
             - no outputs. At each iteration the function manage_windows takes in input the windows and particular actions are performed.
         '''
 
+
         # calculate distances
+
         distances = np.empty([len(self.previous_skeletons), len(self.current_skeletons)], dtype=np.float32)
         for i, cs in enumerate(self.current_skeletons):
             for j, ps in enumerate(self.previous_skeletons):
@@ -42,9 +45,9 @@ class FDTracker:
                 distances[j][i] = np.sqrt(math.pow(cs[0][0]-ps[0][0], 2) + math.pow(cs[0][1]-ps[0][1], 2))
 
         #print(f"distances:{distances}")
-        #print(f"previous_skeletons:{len(self.previous_skeletons)}")
-        #print(f"missing_frames_counters:{self.missing_frames_counters}")
-        #print(f"number of windows:{len(self.windows)}")
+        print(f"previous_skeletons:{len(self.previous_skeletons)}")
+        print(f"missing_frames_counters:{self.missing_frames_counters}")
+        print(f"number of windows:{len(self.windows)}")
         #input()
         #for window in self.windows:
         #    print(f"-- window size:{len(window)}")
@@ -53,6 +56,7 @@ class FDTracker:
         # if there are no colums with inf values, the corresponding column indices needs to be added to the assigneds_keletons 
         # because this list indicates the new skeletons detected in the scene
         # se il minimo supera il threshold della distanza, ricopia tale e quale l'indice??????????
+
         
         if distances.size != 0:
             ''' CASE 0:
@@ -134,7 +138,6 @@ class FDTracker:
         self.previous_skeletons = [skeleton for i, skeleton in enumerate(self.previous_skeletons) if i not in missing_skeletons_indices]
         # Filtra windows mantenendo solo gli elementi non presenti in missing_skeletons_indices
         self.windows = [window for i, window in enumerate(self.windows) if i not in missing_skeletons_indices]
-        
 
     def _manage_windows(self):
         '''
@@ -148,13 +151,16 @@ class FDTracker:
             - ready_windows: each i-th element of this structure is a list of 75 frames of the i-th person tracked
         '''
         ready_windows = []
+        
         for i, w in enumerate(self.windows):
-            if(len(w)==25):
+            if(len(w)==75):
                 ready_windows.append(postprocess(w))
-                del self.windows[i][:15]
+                del self.windows[i][:50]
         return ready_windows
+
         
     def run(self, keypoints):
         self.current_skeletons = preprocess(keypoints)
         self._track()
-        return self._manage_windows()
+        windows = self._manage_windows()
+        return windows

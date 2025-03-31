@@ -6,8 +6,8 @@ from scipy.spatial.transform import Rotation as R
 import numpy as np 
 
 class HPEModel:
-    def __init__(self, models_root='/HPE/models/', device='cpu'):
-        self.device = device
+    def __init__(self, models_root='/HPE/models/', device='gpu'):
+        self.device = torch.device(device)
         # Initialize the model
         self.model = HPEnet().to(self.device)
         self.model.load_state_dict(torch.load(f"{models_root}model.pt", map_location=torch.device(self.device)))
@@ -58,12 +58,13 @@ class HPEModel:
         face_tensor = (face_tensor - self.mean) / self.std
         face_tensor = face_tensor.permute(2, 0, 1)
         face_tensor = face_tensor.type(torch.float32)
+        face_tensor = face_tensor.to(self.device)
 
         pitch, yaw, roll = None, None, None
 
         with torch.inference_mode():
             r1, r2, r3, _ = self.model(face_tensor.unsqueeze(0))
-            r1, r2, r3 = r1.squeeze().numpy(), r2.squeeze().numpy(), r3.squeeze().numpy()
+            r1, r2, r3 = r1.squeeze().cpu().numpy(), r2.squeeze().cpu().numpy(), r3.squeeze().cpu().numpy()
             rotation_matrix = np.array([r1, r2, r3])
             pitch, yaw, roll = R.from_matrix(rotation_matrix).as_euler('xzy', degrees=True)
         
