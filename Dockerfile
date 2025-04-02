@@ -184,4 +184,4 @@ CMD ["python3", "app.py", \
     "-openni2_dll_directories", "/usr/lib/", \
     "-openpose_model_path", "/app/models/", \
     "-hpe_model_root", "/app/HPE/models/", \
-    "-fall_model_root", "/app/falldetection/models/"]
+    "-fall_model_root", "/app/fall_detection/models/"]

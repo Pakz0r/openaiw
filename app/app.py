@@ -19,7 +19,7 @@ CONFIG = {
     "openpose" : {
         "model_folder": "./app/models/",
         "model_pose": "BODY_25",
-        "net_resolution": "-1x368", # Default "-1x368"; AI_Watch "-1x128"
+        "net_resolution": "-1x128", # Default "-1x368"; AI_Watch "-1x128"; Max "-1x176"
         "hand": False,
         "hand_net_resolution": "224x224", # "Default "368x368" (multiples of 16)"
         "face": False,
@@ -30,7 +30,7 @@ CONFIG = {
     },
     "HPE" : {
         "model_root" : './app/HPE/models/',
-        "device": 'gpu'
+        "device": 'cuda'
     },
     "Fall" : {
         "model_root" : './app/fall_detection/model/',
@@ -103,9 +103,6 @@ def main():
 
     if args.fall_model_root is not None:
         CONFIG["Fall"]["model_root"] = args.fall_model_root
-
-    if args.fall_device is not None:
-        CONFIG["Fall"]["device"] = args.fall_device
 
     try:
         # Pulisci il contenuto della cartella di output
