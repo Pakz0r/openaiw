@@ -30,10 +30,10 @@ CONFIG = {
     },
     "HPE" : {
         "model_root" : './app/HPE/models/',
-        "device": 'cuda'
+        "device": 'cpu'
     },
     "Fall" : {
-        "model_root" : './app/fall_detection/model/',
+        "model_root" : './app/fall_detection/models/',
     },
     "output_dir" : "output"
 }
@@ -126,6 +126,7 @@ def main():
 
         print("Inizializzazione del modulo di Vision...")
         vision = Vision.initialize(CONFIG["vision"]["driver"], CONFIG["vision"]["dll_directories"])
+        vision.start()
 
         dev_info = vision.get_device_info()
         if dev_info is not None:

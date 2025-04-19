@@ -11,10 +11,16 @@ class OpenNIVision(IVision):
             self.dev = openni2.Device.open_any()
             self.depth_stream = self.dev.create_depth_stream()
             self.color_stream = self.dev.create_color_stream()
+        except Exception as e:
+            print(f"Errore nell'inizializzazione di OpenNI: {e}")
+            raise
+
+    def start(self):
+        try:
             self.depth_stream.start()
             self.color_stream.start()
         except Exception as e:
-            print(f"Errore nell'inizializzazione di OpenNI: {e}")
+            print(f"Errore nell'avvio del flusso di OpenNI: {e}")
             raise
 
     def get_frames(self):

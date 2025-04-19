@@ -2,6 +2,8 @@
 3rdparty/
 app/models/
 openpose/
+processing/
 output/
+input/
 unity/
 *.pyc

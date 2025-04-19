@@ -7,4 +7,4 @@ docker run --runtime=nvidia --gpus all --rm -it ^
     --device-cgroup-rule "c 189:* rmw" ^
     --name openaiw ^
     --privileged ^
-    openaiw bash
+    openaiw

@@ -6,6 +6,11 @@ class IVision(ABC):
         self.wrapper = wrapper
 
     @abstractmethod
+    def start(self):
+        """Avvia il flusso della camera."""
+        pass
+
+    @abstractmethod
     def get_frames(self):
         """Legge i frame di profondità e colore dalla camera."""
         pass

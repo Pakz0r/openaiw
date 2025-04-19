@@ -21,4 +21,4 @@ docker run --runtime=nvidia --rm -it \
     -v "$OUTPUT_DIR:/app/output" \
     --device-cgroup-rule "c 81:* rmw" \
     --device-cgroup-rule "c 189:* rmw" \
-    openaiw bash
+    openaiw
