@@ -172,7 +172,7 @@ COPY --from=librealsense-builder /opt/librealsense/lib/librealsense2.so /usr/lib
 # Upgrade pip and install python dependencies
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install numpy opencv-python primesense facenet-pytorch scipy && \
-    python3 -m pip install PyOpenGL PyOpenGL_accelerate tensorflow-gpu keras
+    python3 -m pip install PyOpenGL PyOpenGL_accelerate tensorflow-gpu keras keyboard
 
 # Copy the AIWatch application code
 WORKDIR /app

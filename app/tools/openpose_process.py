@@ -1,3 +1,4 @@
+import cv2
 import pyrealsense2 as rs
 import numpy as np
 import shutil
@@ -76,6 +77,7 @@ def main(input_path='input', output_path='processing', bag_path='recording.bag',
                 "poseKeypoints": serialize(datum.poseKeypoints)
             })
 
+            cv2.imshow("OpenPose Output", datum.cvOutputData)
             print(f"Elaborazione del frame {frame_count} completata.")
 
             if playback.current_status() != rs.playback_status.playing:
