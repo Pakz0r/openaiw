@@ -26,13 +26,16 @@ class CoordinateMapper:
 
                 for point_id, keypoint in enumerate(person_keypoints):
                     u, v, confidence = keypoint[0], keypoint[1], keypoint[2]
-                    x, y, z = vision.convert_point_to_world(u, v)
+                    x, y, z = 0, 0, 0
 
-                    # https://github.com/IntelRealSense/librealsense/blob/master/doc/d435i.md#sensor-origin-and-coordinate-system
-                    # Converti le coordinate da right-hand a left-hand per Unity
-                    # A questa conversione va aggiunto un offset di rotazione di 180° sulla camera Unity
-                    # In modo da ottenere che le bone vengano rappresentate correttamente
-                    x, y, z = x, -y, z
+                    if confidence > 0:
+                        x, y, z = vision.convert_point_to_world(u, v)
+
+                        # https://github.com/IntelRealSense/librealsense/blob/master/doc/d435i.md#sensor-origin-and-coordinate-system
+                        # Converti le coordinate da right-hand a left-hand per Unity
+                        # A questa conversione va aggiunto un offset di rotazione di 180° sulla camera Unity
+                        # In modo da ottenere che le bone vengano rappresentate correttamente
+                        x, y, z = x, -y, z
 
                     person_data["skeleton"].append({
                         "pointID": point_id,
